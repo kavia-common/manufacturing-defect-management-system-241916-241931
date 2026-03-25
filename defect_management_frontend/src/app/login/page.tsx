@@ -17,8 +17,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = React.useMemo(() => getSupabaseBrowserClient(), []);
-  const { user } = useAuth();
+  const { user, supabaseConfigured } = useAuth();
 
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -34,8 +33,17 @@ export default function LoginPage() {
 
   async function onSubmit(values: FormValues) {
     setServerError(null);
+
+    if (!supabaseConfigured) {
+      setServerError(
+        "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to enable sign-in.",
+      );
+      return;
+    }
+
     setBusy(true);
     try {
+      const supabase = getSupabaseBrowserClient();
       const { error } = await supabase.auth.signInWithPassword(values);
       if (error) {
         setServerError(error.message);
@@ -57,7 +65,21 @@ export default function LoginPage() {
           </p>
         </header>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        {!supabaseConfigured ? (
+          <div className="surface border-amber-100 bg-amber-50 p-3">
+            <p className="text-sm text-amber-800 font-medium">
+              Supabase auth is not configured
+            </p>
+            <p className="text-xs text-amber-800 mt-1">
+              To enable login, set{" "}
+              <span className="font-mono">NEXT_PUBLIC_SUPABASE_URL</span> and{" "}
+              <span className="font-mono">NEXT_PUBLIC_SUPABASE_ANON_KEY</span>. The app can still be
+              viewed locally, but protected routes will redirect here.
+            </p>
+          </div>
+        ) : null}
+
+        <form className="space-y-4 mt-4" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="space-y-1">
             <label className="label" htmlFor="email">
               Email
@@ -67,6 +89,7 @@ export default function LoginPage() {
               className="input"
               inputMode="email"
               autoComplete="email"
+              disabled={!supabaseConfigured}
               {...form.register("email")}
             />
             {form.formState.errors.email?.message ? (
@@ -85,6 +108,7 @@ export default function LoginPage() {
               className="input"
               type="password"
               autoComplete="current-password"
+              disabled={!supabaseConfigured}
               {...form.register("password")}
             />
             {form.formState.errors.password?.message ? (
@@ -100,7 +124,11 @@ export default function LoginPage() {
             </div>
           ) : null}
 
-          <button className="btn btn-primary w-full" type="submit" disabled={busy}>
+          <button
+            className="btn btn-primary w-full"
+            type="submit"
+            disabled={busy || !supabaseConfigured}
+          >
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>

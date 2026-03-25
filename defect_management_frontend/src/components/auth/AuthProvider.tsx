@@ -1,14 +1,24 @@
 "use client";
 
 import React from "react";
-import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
-import { getSupabaseBrowserClient } from "@/lib/supabaseClient";
+import type {
+  AuthChangeEvent,
+  Session,
+  User,
+  SupabaseClient,
+} from "@supabase/supabase-js";
+import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabaseClient";
 
 export type AuthContextValue = {
   session: Session | null;
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  /**
+   * When false, Supabase is not configured (missing NEXT_PUBLIC_SUPABASE_URL / KEY).
+   * The app will run in a local "no-auth" mode.
+   */
+  supabaseConfigured: boolean;
 };
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined);
@@ -30,12 +40,31 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = React.useMemo(() => getSupabaseBrowserClient(), []);
+  const supabaseConfigured = React.useMemo(() => hasSupabaseEnv(), []);
+  const [supabase, setSupabase] = React.useState<SupabaseClient | null>(null);
+
   const [session, setSession] = React.useState<Session | null>(null);
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    if (!supabaseConfigured) {
+      // Run in "no-auth" mode without crashing the whole app.
+      setSupabase(null);
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    // Safe because supabaseConfigured implies env vars exist.
+    setSupabase(getSupabaseBrowserClient());
+    setLoading(true);
+  }, [supabaseConfigured]);
+
+  React.useEffect(() => {
+    if (!supabase) return;
+
     let mounted = true;
 
     // Initial session load
@@ -65,11 +94,14 @@ export default function AuthProvider({
   }, [supabase]);
 
   const signOut = React.useCallback(async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
   }, [supabase]);
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signOut }}>
+    <AuthContext.Provider
+      value={{ session, user, loading, signOut, supabaseConfigured }}
+    >
       {children}
     </AuthContext.Provider>
   );
