@@ -6,7 +6,11 @@ This frontend expects **public** runtime configuration via `NEXT_PUBLIC_*` varia
 
 ### Backend API
 
-- `NEXT_PUBLIC_API_BASE_URL` (recommended)
+The API client reads:
+
+- `NEXT_PUBLIC_API_BASE_URL`
+
+Note: the container env set also includes `NEXT_PUBLIC_API_BASE` and `NEXT_PUBLIC_BACKEND_URL`, but the code currently uses `NEXT_PUBLIC_API_BASE_URL`.
 
 Examples:
 
@@ -26,8 +30,12 @@ If `NEXT_PUBLIC_API_BASE_URL` is not set, the app defaults to:
 
 The app uses Supabase for authentication.
 
+The Supabase client reads:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Note: the container env set also includes `NEXT_PUBLIC_SUPABASE_KEY`, but the code currently uses `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
 These can be **placeholder values** for UI work that doesn’t require login; the app will still build.
 However, any auth action (sign-in/session checks) will throw a clear runtime error unless these are set correctly.
