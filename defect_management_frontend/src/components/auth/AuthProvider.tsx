@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabaseClient";
 
 export type AuthContextValue = {
@@ -41,7 +41,7 @@ export default function AuthProvider({
     // Initial session load
     supabase.auth
       .getSession()
-      .then(({ data }) => {
+      .then(({ data }: { data: { session: Session | null } }) => {
         if (!mounted) return;
         setSession(data.session ?? null);
         setUser(data.session?.user ?? null);
@@ -51,10 +51,12 @@ export default function AuthProvider({
         setLoading(false);
       });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s ?? null);
-      setUser(s?.user ?? null);
-    });
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, s: Session | null) => {
+        setSession(s ?? null);
+        setUser(s?.user ?? null);
+      },
+    );
 
     return () => {
       mounted = false;
