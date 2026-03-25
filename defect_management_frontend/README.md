@@ -32,11 +32,11 @@ The app uses Supabase for authentication.
 These can be **placeholder values** for UI work that doesn’t require login; the app will still build.
 However, any auth action (sign-in/session checks) will throw a clear runtime error unless these are set correctly.
 
-Example placeholders:
+Example:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_URL=https://fdxlxsldusunyltneupg.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_2X2VTfNHNZSugkScYcAzBg_NlLjo_VT
 ```
 
 ## Getting Started
